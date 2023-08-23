@@ -29,7 +29,7 @@ const remove = async (req, res) => {
   const { id } = req.params;
   const result = await contactsService.removeContact(id);
   if (!result) throw HttpError(404, 'Not found');
-  res.json({ result, message: 'Delete success' });
+  res.json({ message: 'Contact deleted' });
 };
 
 module.exports = {
