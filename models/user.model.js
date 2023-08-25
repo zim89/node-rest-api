@@ -52,7 +52,6 @@ const loginSchema = Joi.object({
   }),
 });
 
-// FIXME:
 const updateSubscriptionSchema = Joi.object({
   subscription: Joi.string()
     .valid(...subscriptionList)
