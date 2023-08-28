@@ -1,6 +1,6 @@
 const express = require('express');
 const usersService = require('../services/users.service');
-const { validateBody, isAuth } = require('../middlewares');
+const { validateBody, isAuth, upload } = require('../middlewares');
 const { schemas } = require('../models/user.model');
 
 const router = express.Router();
@@ -28,6 +28,12 @@ router.get('/current', isAuth, usersService.current);
 // @desc    Update User -> Subscription
 // @route 	PATCH /api/users/subscription
 // @access  Private
+// @test    http://localhost:3000/avatars/file_name.jpeg
 router.patch('/subscription', isAuth, validateBody(schemas.updateSubscriptionSchema), usersService.updateSubscription);
+
+// @desc    Update User -> Avatar
+// @route 	PATCH /api/users/avatars
+// @access  Private
+router.patch('/avatars', isAuth, upload.single('avatar'), usersService.updateAvatar);
 
 module.exports = router;
