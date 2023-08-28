@@ -1,9 +1,14 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const gravatar = require('gravatar');
+const path = require('path');
+const fs = require('fs/promises');
+const Jimp = require('jimp');
 const { User } = require('../models/user.model');
 const { HttpError, controllerWrap } = require('../helpers');
 
 const { SECRET_KEY } = process.env;
+const avatarsDir = path.join(__dirname, '../', 'public', 'avatars');
 
 const register = async (req, res) => {
   const { email, password } = req.body;
@@ -12,7 +17,8 @@ const register = async (req, res) => {
     throw HttpError(409, 'Email in use');
   }
   const hash = await bcrypt.hash(password, 10);
-  const newUser = await User.create({ ...req.body, password: hash });
+  const avatarURL = gravatar.url(email);
+  const newUser = await User.create({ ...req.body, password: hash, avatarURL });
 
   res.status(201).json({
     email: newUser.email,
@@ -78,10 +84,44 @@ const updateSubscription = async (req, res) => {
   res.json(data);
 };
 
+const updateAvatar = async (req, res) => {
+  const { _id } = req.user;
+  const { path: tempUpload, originalname } = req.file;
+  const filename = `${_id}_${originalname}`;
+  const resultUpload = path.join(avatarsDir, filename);
+
+  // Jimp.read(tempUpload)
+  //   .then((file) => {
+  //     return file.resize(Jimp.AUTO, 250).quality(60).write(tempUpload);
+  //   })
+  //   .catch((err) => {
+  //     console.error(err);
+  //   });
+  // await fs.rename(tempUpload, resultUpload);
+
+  Jimp.read(tempUpload)
+    .then((file) => {
+      return file.resize(Jimp.AUTO, 250).quality(60).write(resultUpload);
+    })
+    .catch(async (err) => {
+      await fs.unlink(tempUpload);
+      console.error(err);
+    });
+  await fs.unlink(tempUpload);
+
+  const avatarURL = path.join('avatars', filename);
+  await User.findByIdAndUpdate(_id, { avatarURL });
+
+  res.json({
+    avatarURL,
+  });
+};
+
 module.exports = {
   register: controllerWrap(register),
   login: controllerWrap(login),
   logout: controllerWrap(logout),
   current: controllerWrap(current),
   updateSubscription: controllerWrap(updateSubscription),
+  updateAvatar: controllerWrap(updateAvatar),
 };
