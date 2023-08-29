@@ -10,6 +10,16 @@ const router = express.Router();
 // @access  Public
 router.post('/register', validateBody(schemas.registerSchema), usersService.register);
 
+// @desc    Verify email
+// @route 	GET /api/users/verify/:code
+// @access  Public
+router.get('/verify/:verificationToken', usersService.verifyEmail);
+
+// @desc    Reverify email
+// @route 	POST /api/users/verify
+// @access  Public
+router.post('/verify', validateBody(schemas.emailSchema), usersService.resendVerifyEmail);
+
 // @desc    Login
 // @route 	POST /api/users/login
 // @access  Public
